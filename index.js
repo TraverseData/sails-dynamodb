@@ -7,7 +7,7 @@
 // var mysql = require('node-mysql');
 // ...
 
-var Vogels = require('vogels');
+var Vogels = require('@traverse-data/vogels');
 var AWS = Vogels.AWS;
 var _ = require('lodash');
 var DynamoDB = false;
