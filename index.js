@@ -215,7 +215,7 @@ module.exports = (function () {
           schema.globalIndex(indexName, indices[indexName]);
         }
 
-      }, collection.pluralize);
+      }, collection.shouldPluralize);
 
       // Cache Vogels model
       _vogelsReferences[collectionName] = vogelsModel;
