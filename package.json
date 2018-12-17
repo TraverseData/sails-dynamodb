@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node test/integration/runner -R spec -b",
-    "release": "npm publish --access public"
+    "release": "git commit -am $npm_package_version && git tag $npm_package_version && git push && git push --tags && npm publish --access public"
   },
   "repository": {
     "type": "git",
@@ -24,7 +24,7 @@
   "author": "gadelkareem",
   "license": "MIT",
   "dependencies": {
-    "@traverse-data/vogels": "0.12.1",
+    "@traverse-data/vogels": "0.12.2",
     "lodash": "^3.10.1",
     "async": "^1.5.0"
   },
