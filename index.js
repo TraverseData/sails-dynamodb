@@ -155,14 +155,7 @@ module.exports = (function () {
         collection.definition[primaryKeyNames[0]].primaryKey = 'hash';
       }
 
-      // Vogels adds an 's'.  So let's remove an 's'.
-      var vogelsCollectionName  = collectionName[collectionName.length-1] === 's' ?
-
-                                      collectionName.slice(0, collectionName.length-1) :
-                                      collectionName;
-
-      var vogelsModel = Vogels.define(vogelsCollectionName, function (schema) {
-
+      var vogelsModel = Vogels.define(collectionName, function (schema) {
         var columns = collection.definition;
 
         var indices = {};
@@ -222,7 +215,7 @@ module.exports = (function () {
           schema.globalIndex(indexName, indices[indexName]);
         }
 
-      });
+      }, collection.pluralize);
 
       // Cache Vogels model
       _vogelsReferences[collectionName] = vogelsModel;
@@ -369,9 +362,8 @@ module.exports = (function () {
 
       // Keep a reference to these collections
       _collectionReferences = collections;
-
       // Create Vogels models for the collections
-      _.forOwn(collections, function(coll, collName) {
+       _.forOwn(collections, function (coll, collName) {
         adapter._createModel(collName);
       });
 
