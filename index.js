@@ -93,7 +93,7 @@ module.exports = (function () {
   var _dbPools = {};
 
   var adapter = {
-
+    adapterApiVersion: 1,
     identity: 'sails-dynamodb',
     pkFormat: 'string',
 
