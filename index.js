@@ -143,7 +143,8 @@ module.exports = (function () {
       var collection = _collectionReferences[collectionName];
 
       // Attrs with primaryKeys
-      var primaryKeys = _.pick(collection.definition, function(attr) { return !!attr.primaryKey } );
+      // var primaryKeys = _.pick(collection.definition, function (attr) { return !!attr.primaryKey });
+      var primaryKeys = collection.primaryKeys;
       var primaryKeyNames =_.keys(primaryKeys);
 
       if (primaryKeyNames.length < 1 || primaryKeyNames.length > 2) {
@@ -151,13 +152,16 @@ module.exports = (function () {
       }
 
       // One primary key, then it's a hash
-      if (primaryKeyNames.length == 1) {
-        collection.definition[primaryKeyNames[0]].primaryKey = 'hash';
+      if (primaryKeyNames.length >= 1) {
+        primaryKeyNames.forEach(key, index => {
+          collection.definition[key].primaryKey = primaryKeys[key] ||
+            (index === 0) ? 'hash' : 'range';
+        });
       }
 
       var vogelsModel = Vogels.define(collectionName, function (schema) {
         var columns = collection.definition;
-
+        var indexes = collection.indexes;
         var indices = {};
 
         // set columns
@@ -176,9 +180,9 @@ module.exports = (function () {
             var indexName;
             var indexType;
 
-            if ("index" in attributes && attributes.index !== 'secondary') {
+            if (indexes[columnName] && indexes[columnName] !== 'secondary') {
 
-              index = attributes.index;
+              index = indexes[columnName];
 
               if (_.isArray(index)){
                 index.forEach((oneIndex) => {
@@ -242,7 +246,7 @@ module.exports = (function () {
       var lodash = _;
       var collection = _collectionReferences[collectionName];
 
-      var maps = lodash.mapValues(collection.definition, "primaryKey");
+      var maps = collection.primaryKeys || {};
       //            console.log(results);
       var list = lodash.pick(maps, function (value, key) {
         return typeof value !== "undefined";
@@ -267,8 +271,8 @@ module.exports = (function () {
       var lodash = _;
       var collection = _collectionReferences[collectionName];
 
-      var list = lodash.pick(collection.definition, function (value, key) {
-        return ("index" in value && value.index === true)
+      var list = lodash.pick(collection.indexes, function (value, key) {
+        return (value === true);
       });
       return lodash.keys(list);
     },
@@ -748,7 +752,8 @@ module.exports = (function () {
     _whichIndex: function(collectionName, fields) {
 
       var columns = _collectionReferences[collectionName].definition;
-
+      var indexes = _collectionReferences[collectionName].indexes || {};
+      var primaryKeys = _collectionReferences[collectionName].primaryKeys || {};
       var primaryHash         = false;
       var primaryRange        = false;
       var secondaryRange      = false;
@@ -784,20 +789,20 @@ module.exports = (function () {
         }
 
         // set primary hash
-        if (column.primaryKey){
-          if (column.primaryKey === true || column.primaryKey === 'hash'){
+        if (primaryKeys.hasOwnProperty(fieldName)){
+          if (primaryKeys[fieldName] === true || primaryKeys[fieldName] === 'hash'){
             primaryHash = fieldName;
-          }else if (column.primaryKey === 'range') {
+          } else if (primaryKeys[fieldName] === 'range') {
             primaryRange = fieldName;
           }
         }
 
         // using secondary or GSIs
-        if (column.index){
+        if (indexes.hasOwnProperty(fieldName)){
           // console.log("COLUMN.INDEX")
           // console.log(column.index)
-          if (_.isArray(column.index)){
-            column.index.forEach((oneIndex) => {
+          if (_.isArray(indexes[fieldName])){
+            indexes[fieldName].forEach((oneIndex) => {
               if (oneIndex === 'secondary'){
                 secondaryRange = fieldName;
               }else{
@@ -813,10 +818,10 @@ module.exports = (function () {
               }
             });
             // throw new Error(`No support yet for multiple non-primary indexes, ${fieldName} = ${column.index}`);
-          }else if (column.index === 'secondary'){
+          } else if (indexes[fieldName] === 'secondary'){
             secondaryRange = fieldName;
           }else{
-            indexInfo = adapter._parseIndex(column.index, fieldName);
+            indexInfo = adapter._parseIndex(indexes[fieldName], fieldName);
             indexName = indexInfo[0];
             indexType = indexInfo[1];
 
